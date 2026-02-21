@@ -1,6 +1,6 @@
 """
 Traduction locale EN → FR d'un dataset JSONL
-Modèle : facebook/nllb-200-distilled-1.3B
+Modèle : facebook/nllb-200-distilled-1.3B (chargé depuis /model)
 
 Installation :
     pip install transformers torch sentencepiece accelerate
@@ -19,9 +19,9 @@ from pathlib import Path
 
 # ─── CONFIG ────────────────────────────────────────────────────────────────────
 
-MODEL_NAME   = "facebook/nllb-200-distilled-1.3B"
+MODEL_PATH   = "./model"   # Dossier local contenant le modèle
 SRC_LANG     = "eng_Latn"
-TGT_LANG     = ["tur_Latn"]
+TGT_LANG     = ["spa_Latn", "tur_Latn"]
 BATCH_SIZE   = 8          # Réduis à 4 si tu manques de VRAM
 MAX_LENGTH   = 512        # Longueur max des tokens générés
 
@@ -34,10 +34,11 @@ def load_model(device: str):
     from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
     import torch
 
-    print(f"⏳ Chargement du modèle {MODEL_NAME}...")
-    tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
+    print(f"⏳ Chargement du modèle depuis {MODEL_PATH}...")
+    tokenizer = AutoTokenizer.from_pretrained(MODEL_PATH, local_files_only=True)
     model = AutoModelForSeq2SeqLM.from_pretrained(
-        MODEL_NAME,
+        MODEL_PATH,
+        local_files_only=True,
         torch_dtype=torch.float16 if device == "cuda" else torch.float32,
     )
     model = model.to(device)
@@ -168,8 +169,7 @@ def detect_device():
 
 if __name__ == "__main__":
 
-
     device = detect_device()
     for lang in TGT_LANG:
         print(f"\n=== Traduction vers {lang} ===")
-        translate_dataset("dataset_clean.jsonl", f"dataset_{lang[0:3]}.jsonl", lang, device)
+        translate_dataset("dataset_en.jsonl", f"dataset_{lang[0:3]}.jsonl", lang, device)
